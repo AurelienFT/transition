@@ -6,7 +6,7 @@ mod tests {
         #[transition::versioned(versions("0.1.2", "0.2.0", "0.3.0"))]
         struct Test {
             a: u64,
-           // #[transition::versioned(versions("0.3.0"))]
+            //#[transition::field(versions("0.3.0"))]
            // b: u64,
         }
 
@@ -40,6 +40,8 @@ mod tests {
         let test = <Test!["0.2.0"]>::new();
         assert_eq!(test.get_a(), 2);
 
+        assert_eq!(test.mul(2), 4);
+
         let test = <Test!["0.1.2"]>::new();
         assert_eq!(test.get_a(), 1);
 
@@ -48,18 +50,18 @@ mod tests {
         struct TestSerializer {}
 
         //TODO: Make it works to be able to use the same serializer for multiple versions and don't use the macro Test!
-        //#[transition::impl_version(versions("0.1.2", "0.2.0"), structure = "Test")]
-        impl Serializer<Test!["0.2.0"]> for TestSerializer {
-            fn serialize(&self, data: &Test!["0.2.0"], buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
+        #[transition::impl_version(versions("0.1.2", "0.2.0"), structure = "Test")]
+        impl Serializer<Test> for TestSerializer {
+            fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
                 Ok(())
             }
         }
 
         //TODO: Make it works to be able to use the same serializer for multiple versions and don't use the macro Test!
-        //#[transition::impl_version(versions("0.3.0"), structure = "Test")]
-        impl Serializer<Test!["0.3.0"]> for TestSerializer {
-            fn serialize(&self, data: &Test!["0.3.0"], buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
+        #[transition::impl_version(versions("0.3.0"), structure = "Test")]
+        impl Serializer<Test> for TestSerializer {
+            fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
                 //buffer.push(data.b as u8);
                 Ok(())

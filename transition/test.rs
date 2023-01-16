@@ -1,71 +1,137 @@
-0.1.2 => Test_V0_1_2
-0.2.0 => Test_V0_2_0
-[TokenStream [Group { delimiter: Bracket, stream: TokenStream [Literal { kind: Str, symbol: "0.1.2", suffix: None, span: #7 bytes(26..78) }], span: #7 bytes(26..78) }, Punct { ch: '=', spacing: Joint, span: #7 bytes(26..78) }, Punct { ch: '>', spacing: Alone, span: #7 bytes(26..78) }, Group { delimiter: Brace, stream: TokenStream [Ident { ident: "Test_V0_1_2", span: #0 bytes(90..94) }], span: #7 bytes(26..78) }, Punct { ch: ';', spacing: Alone, span: #7 bytes(26..78) }], TokenStream [Group { delimiter: Bracket, stream: TokenStream [Literal { kind: Str, symbol: "0.2.0", suffix: None, span: #7 bytes(26..78) }], span: #7 bytes(26..78) }, Punct { ch: '=', spacing: Joint, span: #7 bytes(26..78) }, Punct { ch: '>', spacing: Alone, span: #7 bytes(26..78) }, Group { delimiter: Brace, stream: TokenStream [Ident { ident: "Test_V0_2_0", span: #0 bytes(90..94) }], span: #7 bytes(26..78) }, Punct { ch: ';', spacing: Alone, span: #7 bytes(26..78) }]]
 #![feature(prelude_import)]
 #[prelude_import]
 use std::prelude::rust_2021::*;
 #[macro_use]
 extern crate std;
-extern crate test;
-#[cfg(test)]
-#[rustc_test_marker = "basic"]
-pub const basic: test::TestDescAndFn = test::TestDescAndFn {
-    desc: test::TestDesc {
-        name: test::StaticTestName("basic"),
-        ignore: false,
-        ignore_message: ::core::option::Option::None,
-        compile_fail: false,
-        no_run: false,
-        should_panic: test::ShouldPanic::No,
-        test_type: test::TestType::IntegrationTest,
-    },
-    testfn: test::StaticTestFn(|| test::assert_test_result(basic())),
-};
-fn basic() {
-    struct Test {
-        a: u64,
-    }
-    struct Test_V0_1_2 {
-        a: u64,
-    }
-    struct Test_V0_2_0 {
-        a: u64,
-    }
-    impl Test_V0_1_2 {
-        fn new() -> Self {
-            Self { a: 1 }
-        }
-    }
-    impl Test_V0_2_0 {
-        fn new() -> Self {
-            Self { a: 2 }
-        }
-    }
-    impl Test_V0_1_2 {
-        fn get_a(&self) -> u64 {
-            self.a
-        }
-        fn mul(&self, b: u64) -> u64 {
-            self.a * b
-        }
-    }
-    impl Test_V0_2_0 {
-        fn get_a(&self) -> u64 {
-            self.a
-        }
-        fn mul(&self, b: u64) -> u64 {
-            self.a * b
-        }
-    }
-    let test = <()>::new();
-    {
-        ::std::io::_print(
-            ::core::fmt::Arguments::new_v1(
-                &["", "\n"],
-                &[::core::fmt::ArgumentV1::new_display(&test.get_a())],
-            ),
-        );
+mod tests {
+    use massa_serialization::{Serializer, Deserializer, SerializeError};
+    extern crate test;
+    #[cfg(test)]
+    #[rustc_test_marker = "tests::basic"]
+    pub const basic: test::TestDescAndFn = test::TestDescAndFn {
+        desc: test::TestDesc {
+            name: test::StaticTestName("tests::basic"),
+            ignore: false,
+            ignore_message: ::core::option::Option::None,
+            compile_fail: false,
+            no_run: false,
+            should_panic: test::ShouldPanic::No,
+            test_type: test::TestType::IntegrationTest,
+        },
+        testfn: test::StaticTestFn(|| test::assert_test_result(basic())),
     };
+    fn basic() {
+        struct Test {
+            a: u64,
+        }
+        struct Test_V0_1_2 {
+            a: u64,
+        }
+        struct Test_V0_2_0 {
+            a: u64,
+        }
+        struct Test_V0_3_0 {
+            a: u64,
+        }
+        impl Test_V0_1_2 {
+            fn new() -> Self {
+                Self { a: 1 }
+            }
+        }
+        impl Test_V0_2_0 {
+            fn new() -> Self {
+                Self { a: 2 }
+            }
+        }
+        impl Test_V0_1_2 {
+            fn get_a(&self) -> u64 {
+                self.a
+            }
+            fn mul(&self, b: u64) -> u64 {
+                self.a * b
+            }
+        }
+        impl Test_V0_2_0 {
+            fn get_a(&self) -> u64 {
+                self.a
+            }
+            fn mul(&self, b: u64) -> u64 {
+                self.a * b
+            }
+        }
+        let test = <Test_V0_2_0>::new();
+        match (&test.get_a(), &2) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    let kind = ::core::panicking::AssertKind::Eq;
+                    ::core::panicking::assert_failed(
+                        kind,
+                        &*left_val,
+                        &*right_val,
+                        ::core::option::Option::None,
+                    );
+                }
+            }
+        };
+        let test = <Test_V0_1_2>::new();
+        match (&test.get_a(), &1) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    let kind = ::core::panicking::AssertKind::Eq;
+                    ::core::panicking::assert_failed(
+                        kind,
+                        &*left_val,
+                        &*right_val,
+                        ::core::option::Option::None,
+                    );
+                }
+            }
+        };
+        match (&test.mul(2), &2) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    let kind = ::core::panicking::AssertKind::Eq;
+                    ::core::panicking::assert_failed(
+                        kind,
+                        &*left_val,
+                        &*right_val,
+                        ::core::option::Option::None,
+                    );
+                }
+            }
+        };
+        struct TestSerializer {}
+        impl Serializer<Test_V0_1_2> for TestSerializer {
+            fn serialize(
+                &self,
+                data: &Test_V0_1_2,
+                buffer: &mut Vec<u8>,
+            ) -> Result<(), SerializeError> {
+                buffer.push(data.a as u8);
+                Ok(())
+            }
+        }
+        impl Serializer<Test_V0_2_0> for TestSerializer {
+            fn serialize(
+                &self,
+                data: &Test_V0_2_0,
+                buffer: &mut Vec<u8>,
+            ) -> Result<(), SerializeError> {
+                buffer.push(data.a as u8);
+                Ok(())
+            }
+        }
+        impl Serializer<Test_V0_3_0> for TestSerializer {
+            fn serialize(
+                &self,
+                data: &Test_V0_3_0,
+                buffer: &mut Vec<u8>,
+            ) -> Result<(), SerializeError> {
+                buffer.push(data.a as u8);
+                Ok(())
+            }
+        }
+    }
 }
 #[rustc_main]
 pub fn main() -> () {

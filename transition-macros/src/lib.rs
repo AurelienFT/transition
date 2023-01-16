@@ -48,8 +48,7 @@ pub fn versioned(attr: TokenStream, input: TokenStream) -> TokenStream {
 pub fn impl_version(attr: TokenStream, input: TokenStream) -> TokenStream {
     let attr_args = parse_macro_input!(attr as AttributeArgs);
     let args = ArgsImpl::from_list(&attr_args).unwrap();
-    let mut impl_versioned = parse_macro_input!(input as ItemImpl);
-    println!("{:?}", args);
+    let impl_versioned = parse_macro_input!(input as ItemImpl);
     let impls = generate_versioned_impls(&args.structure, &impl_versioned, &args.versions);
     TokenStream::from(quote::quote! {
         #(#impls)*
