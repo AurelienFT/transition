@@ -1,5 +1,6 @@
 mod tests {
     use massa_serialization::{Serializer, Deserializer, SerializeError};
+    use nom::{error::{ParseError, ContextError}, IResult};
     #[test]
     fn basic() {
 
@@ -47,8 +48,6 @@ mod tests {
             }
         }
 
-        //TODO: Add syntax without specifying version for default to use the latest. Do we really want this ? 
-
         let test = <Test!["0.2.0"]>::new();
         assert_eq!(test.get_a(), 2);
         assert_eq!(test.mul(2), 4);
@@ -59,6 +58,11 @@ mod tests {
 
         let test = <Test!["0.3.0"]>::new();
         assert_eq!(test.get_b(), 3);
+
+        let test = Test::new();
+        assert_eq!(test.get_b(), 3);
+
+        //TODO: Add auto serialize version byte
 
         struct TestSerializer {}
 
@@ -79,7 +83,29 @@ mod tests {
             }
         }
 
-        //TODO: Add deserializer
+        struct TestDeserializer {}
+
+        #[transition::impl_version(versions("0.1.2", "0.2.0"), structure = "Test")]
+        impl Deserializer<Test> for TestDeserializer {
+            fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
+                    &self,
+                    buffer: &'a [u8],
+                ) -> IResult<&'a [u8], Test, E> {
+                    // Not really implemented because lack of time
+                    Ok((buffer, Test {a: 2}))
+            }
+        }
+
+        #[transition::impl_version(versions("0.3.0"), structure = "Test")]
+        impl Deserializer<Test> for TestDeserializer {
+            fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
+                    &self,
+                    buffer: &'a [u8],
+                ) -> IResult<&'a [u8], Test, E> {
+                    // Compile error because `b` is not declared
+                    Ok((buffer, Test {a: 2, b: 3}))
+            }
+        }
 
     }
 }

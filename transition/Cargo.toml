@@ -10,3 +10,4 @@ transition-macros = { path = "../transition-macros" }
 
 [dev-dependencies]
 massa-serialization = { git = "https://github.com/massalabs/massa.git", package = "massa_serialization" }
+nom = "7.1"

@@ -101,6 +101,24 @@ impl<'a> VisitMut for ImplVisitor<'a> {
         }
         visit_mut::visit_type_mut(self, node);
     }
+
+    fn visit_expr_struct_mut(&mut self, i: &mut syn::ExprStruct) {
+        if let Some(ident) = i.path.get_ident() {
+            if self.struct_ident == ident {
+                i.path.segments[0].ident = syn::Ident::new(
+                    &format!(
+                        "{}V{}_{}_{}",
+                        ident,
+                        self.version.major,
+                        self.version.minor,
+                        self.version.patch
+                    ),
+                    ident.span(),
+                );
+            }
+        }
+        visit_mut::visit_expr_struct_mut(self, i);
+    }
 }
 
 pub fn generate_versioned_impls(

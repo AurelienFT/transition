@@ -5,6 +5,10 @@ use std::prelude::rust_2021::*;
 extern crate std;
 mod tests {
     use massa_serialization::{Serializer, Deserializer, SerializeError};
+    use nom::{
+        error::{ParseError, ContextError},
+        IResult,
+    };
     extern crate test;
     #[cfg(test)]
     #[rustc_test_marker = "tests::basic"]
@@ -40,6 +44,14 @@ mod tests {
         impl TestV0_2_0 {
             fn new() -> Self {
                 Self { a: 2 }
+            }
+        }
+        impl TestV0_3_0 {
+            fn new() -> Self {
+                Self { a: 2, b: 3 }
+            }
+            fn get_b(&self) -> u64 {
+                self.b
             }
         }
         impl TestV0_1_2 {
@@ -112,6 +124,34 @@ mod tests {
                 }
             }
         };
+        let test = <TestV0_3_0>::new();
+        match (&test.get_b(), &3) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    let kind = ::core::panicking::AssertKind::Eq;
+                    ::core::panicking::assert_failed(
+                        kind,
+                        &*left_val,
+                        &*right_val,
+                        ::core::option::Option::None,
+                    );
+                }
+            }
+        };
+        let test = Test::new();
+        match (&test.get_b(), &3) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    let kind = ::core::panicking::AssertKind::Eq;
+                    ::core::panicking::assert_failed(
+                        kind,
+                        &*left_val,
+                        &*right_val,
+                        ::core::option::Option::None,
+                    );
+                }
+            }
+        };
         struct TestSerializer {}
         impl Serializer<TestV0_1_2> for TestSerializer {
             fn serialize(
@@ -140,7 +180,33 @@ mod tests {
                 buffer: &mut Vec<u8>,
             ) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
+                buffer.push(data.b as u8);
                 Ok(())
+            }
+        }
+        struct TestDeserializer {}
+        impl Deserializer<TestV0_1_2> for TestDeserializer {
+            fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
+                &self,
+                buffer: &'a [u8],
+            ) -> IResult<&'a [u8], TestV0_1_2, E> {
+                Ok((buffer, TestV0_1_2 { a: 2 }))
+            }
+        }
+        impl Deserializer<TestV0_2_0> for TestDeserializer {
+            fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
+                &self,
+                buffer: &'a [u8],
+            ) -> IResult<&'a [u8], TestV0_2_0, E> {
+                Ok((buffer, TestV0_2_0 { a: 2 }))
+            }
+        }
+        impl Deserializer<TestV0_3_0> for TestDeserializer {
+            fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
+                &self,
+                buffer: &'a [u8],
+            ) -> IResult<&'a [u8], TestV0_3_0, E> {
+                Ok((buffer, TestV0_3_0 { a: 2, b: 3 }))
             }
         }
     }

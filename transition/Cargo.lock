@@ -153,6 +153,7 @@ name = "transition"
 version = "0.1.0"
 dependencies = [
  "massa_serialization",
+ "nom",
  "transition-macros",
 ]
 
