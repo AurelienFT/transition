@@ -103,6 +103,7 @@ mod tests {
                     buffer: &'a [u8],
                 ) -> IResult<&'a [u8], Test, E> {
                     // Compile error because `b` is not declared
+                    //Ok((buffer, Test {a: 2}))
                     Ok((buffer, Test {a: 2, b: 3}))
             }
         }
