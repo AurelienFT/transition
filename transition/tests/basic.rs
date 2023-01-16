@@ -6,8 +6,9 @@ mod tests {
         #[transition::versioned(versions("0.1.2", "0.2.0", "0.3.0"))]
         struct Test {
             a: u64,
-            //#[transition::field(versions("0.3.0"))]
-           // b: u64,
+            //TODO: Use add possibility to use <> in version number
+            #[transition::field(versions("0.3.0"))]
+            b: u64,
         }
 
         #[transition::impl_version(versions("0.1.2"))]
@@ -21,6 +22,17 @@ mod tests {
         impl Test {
             fn new() -> Self {
                 Self { a: 2 }
+            }
+        }
+
+        #[transition::impl_version(versions("0.3.0"))]
+        impl Test {
+            fn new() -> Self {
+                Self { a: 2, b: 3 }
+            }
+
+            fn get_b(&self) -> u64 {
+                self.b
             }
         }
 
@@ -39,17 +51,17 @@ mod tests {
 
         let test = <Test!["0.2.0"]>::new();
         assert_eq!(test.get_a(), 2);
-
         assert_eq!(test.mul(2), 4);
 
         let test = <Test!["0.1.2"]>::new();
         assert_eq!(test.get_a(), 1);
-
         assert_eq!(test.mul(2), 2);
+
+        let test = <Test!["0.3.0"]>::new();
+        assert_eq!(test.get_b(), 3);
 
         struct TestSerializer {}
 
-        //TODO: Make it works to be able to use the same serializer for multiple versions and don't use the macro Test!
         #[transition::impl_version(versions("0.1.2", "0.2.0"), structure = "Test")]
         impl Serializer<Test> for TestSerializer {
             fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
@@ -58,16 +70,16 @@ mod tests {
             }
         }
 
-        //TODO: Make it works to be able to use the same serializer for multiple versions and don't use the macro Test!
         #[transition::impl_version(versions("0.3.0"), structure = "Test")]
         impl Serializer<Test> for TestSerializer {
             fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
-                //buffer.push(data.b as u8);
+                buffer.push(data.b as u8);
                 Ok(())
             }
         }
 
         //TODO: Add deserializer
+
     }
 }

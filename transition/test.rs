@@ -21,29 +21,28 @@ mod tests {
         testfn: test::StaticTestFn(|| test::assert_test_result(basic())),
     };
     fn basic() {
-        struct Test {
+        type Test = TestV0_3_0;
+        struct TestV0_1_2 {
             a: u64,
         }
-        struct Test_V0_1_2 {
+        struct TestV0_2_0 {
             a: u64,
         }
-        struct Test_V0_2_0 {
+        struct TestV0_3_0 {
             a: u64,
+            b: u64,
         }
-        struct Test_V0_3_0 {
-            a: u64,
-        }
-        impl Test_V0_1_2 {
+        impl TestV0_1_2 {
             fn new() -> Self {
                 Self { a: 1 }
             }
         }
-        impl Test_V0_2_0 {
+        impl TestV0_2_0 {
             fn new() -> Self {
                 Self { a: 2 }
             }
         }
-        impl Test_V0_1_2 {
+        impl TestV0_1_2 {
             fn get_a(&self) -> u64 {
                 self.a
             }
@@ -51,7 +50,7 @@ mod tests {
                 self.a * b
             }
         }
-        impl Test_V0_2_0 {
+        impl TestV0_2_0 {
             fn get_a(&self) -> u64 {
                 self.a
             }
@@ -59,7 +58,7 @@ mod tests {
                 self.a * b
             }
         }
-        let test = <Test_V0_2_0>::new();
+        let test = <TestV0_2_0>::new();
         match (&test.get_a(), &2) {
             (left_val, right_val) => {
                 if !(*left_val == *right_val) {
@@ -73,7 +72,20 @@ mod tests {
                 }
             }
         };
-        let test = <Test_V0_1_2>::new();
+        match (&test.mul(2), &4) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    let kind = ::core::panicking::AssertKind::Eq;
+                    ::core::panicking::assert_failed(
+                        kind,
+                        &*left_val,
+                        &*right_val,
+                        ::core::option::Option::None,
+                    );
+                }
+            }
+        };
+        let test = <TestV0_1_2>::new();
         match (&test.get_a(), &1) {
             (left_val, right_val) => {
                 if !(*left_val == *right_val) {
@@ -101,30 +113,30 @@ mod tests {
             }
         };
         struct TestSerializer {}
-        impl Serializer<Test_V0_1_2> for TestSerializer {
+        impl Serializer<TestV0_1_2> for TestSerializer {
             fn serialize(
                 &self,
-                data: &Test_V0_1_2,
+                data: &TestV0_1_2,
                 buffer: &mut Vec<u8>,
             ) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
                 Ok(())
             }
         }
-        impl Serializer<Test_V0_2_0> for TestSerializer {
+        impl Serializer<TestV0_2_0> for TestSerializer {
             fn serialize(
                 &self,
-                data: &Test_V0_2_0,
+                data: &TestV0_2_0,
                 buffer: &mut Vec<u8>,
             ) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
                 Ok(())
             }
         }
-        impl Serializer<Test_V0_3_0> for TestSerializer {
+        impl Serializer<TestV0_3_0> for TestSerializer {
             fn serialize(
                 &self,
-                data: &Test_V0_3_0,
+                data: &TestV0_3_0,
                 buffer: &mut Vec<u8>,
             ) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);

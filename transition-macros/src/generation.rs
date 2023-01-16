@@ -1,12 +1,40 @@
-use crate::version::{Version, Versions};
+use crate::{version::{Version, Versions}, Args};
+use darling::{FromMeta, util::parse_attribute_to_meta_list};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
     visit_mut::{self, VisitMut},
-    ItemImpl, ItemStruct, Type,
+    Fields,
+    ItemImpl, ItemStruct, Type, NestedMeta, Field,
 };
 
-//fn filter_fields(&mut )
+fn filter_fields(struct_version: &mut ItemStruct, version: &Version) {
+    if let Fields::Named(fields) = &mut struct_version.fields {
+        fields.named = fields.named.iter().filter_map(|field: &Field| {
+            let mut final_field = Some(field.clone());
+            let final_attrs = field.attrs.iter().filter_map(|attr| {
+                if attr.path.segments.len() > 1 {
+                    if attr.path.segments[0].ident == "transition" && attr.path.segments[1].ident == "field" {
+                        let attr_args = parse_attribute_to_meta_list(attr).unwrap();
+                        let args = Args::from_list(&attr_args.nested.into_iter().collect::<Vec<NestedMeta>>()).unwrap();
+                        if !args.versions.0.contains(version) {
+                            final_field = None;
+                        }
+                        None
+                    } else {
+                        Some(attr.clone())
+                    }
+                } else {
+                    Some(attr.clone())
+                }
+            }).collect();
+            if let Some(f) = &mut final_field {
+                f.attrs = final_attrs;
+            }
+            final_field
+        }).collect();
+    }
+}
 
 pub fn generate_versioned_struct(input: &ItemStruct, versions: &Versions) -> Vec<ItemStruct> {
     let mut structs = Vec::new();
@@ -19,7 +47,7 @@ pub fn generate_versioned_struct(input: &ItemStruct, versions: &Versions) -> Vec
             ),
             input.ident.span(),
         );
-        //filter_fields(&mut struct_version, version);
+        filter_fields(&mut struct_version, version);
         structs.push(struct_version);
     }
     return structs;
@@ -55,18 +83,21 @@ impl<'a> VisitMut for ImplVisitor<'a> {
         // Sub-recurse (not really needed here since there aren't
         // sub-expressions within an ExprType):
         if let Type::Path(path) = node {
-            if self.struct_ident == &path.path.segments[0].ident {
-                path.path.segments[0].ident = syn::Ident::new(
-                    &format!(
-                        "{}V{}_{}_{}",
-                        path.path.segments[0].ident,
-                        self.version.major,
-                        self.version.minor,
-                        self.version.patch
-                    ),
-                    path.path.segments[0].ident.span(),
-                );
+            if let Some(ident) = path.path.get_ident() {
+                if self.struct_ident == ident {
+                    path.path.segments[0].ident = syn::Ident::new(
+                        &format!(
+                            "{}V{}_{}_{}",
+                            ident,
+                            self.version.major,
+                            self.version.minor,
+                            self.version.patch
+                        ),
+                        ident.span(),
+                    );
+                }
             }
+
         }
         visit_mut::visit_type_mut(self, node);
     }
@@ -89,15 +120,17 @@ pub fn generate_versioned_impls(
             impls.push(impl_version);
         } else {
             if let syn::Type::Path(path) = &mut *impl_version.self_ty {
-                path.path.segments[0].ident = syn::Ident::new(
-                    &format!(
-                        "{}V{}_{}_{}",
-                        path.path.segments[0].ident, version.major, version.minor, version.patch
-                    ),
-                    path.path.segments[0].ident.span(),
-                );
-                impls.push(impl_version);
-                continue;
+                if let Some(ident) = path.path.get_ident() {
+                    path.path.segments[0].ident = syn::Ident::new(
+                        &format!(
+                            "{}V{}_{}_{}",
+                            ident, version.major, version.minor, version.patch
+                        ),
+                        ident.span(),
+                    );
+                    impls.push(impl_version);
+                    continue;
+                }
             }
         }
     }

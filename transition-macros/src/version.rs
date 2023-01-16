@@ -11,6 +11,21 @@ pub struct Version {
     pub patch: u32,
 }
 
+impl Version {
+    pub fn to_ident(&self, ident: syn::Ident) -> syn::Ident {
+        syn::Ident::new(
+            &format!(
+                "{}V{}_{}_{}",
+                ident,
+                self.major,
+                self.minor,
+                self.patch
+            ),
+            ident.span(),
+        )
+    }
+}
+
 impl PartialOrd for Version {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         if self.major != other.major {

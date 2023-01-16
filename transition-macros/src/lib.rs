@@ -23,18 +23,21 @@ struct ArgsImpl {
 #[proc_macro_attribute]
 pub fn versioned(attr: TokenStream, input: TokenStream) -> TokenStream {
     let attr_args = parse_macro_input!(attr as AttributeArgs);
-    let args = Args::from_list(&attr_args).unwrap();
+    let mut args = Args::from_list(&attr_args).unwrap();
+    args.versions.0.sort();
     let mut struct_versioned = parse_macro_input!(input as ItemStruct);
     //TODO: Remove only transition ones
     struct_versioned.attrs.retain(|attr| attr.path.is_ident("transition"));
-    let default_struct = quote::quote! {
-        #struct_versioned
+    let highest_version = args.versions.0.last().unwrap().to_ident(struct_versioned.ident.clone());
+    let ident = struct_versioned.ident.clone();
+    let default_type = quote::quote! {
+        type #ident = #highest_version;
     };
     let structs = generate_versioned_struct(&struct_versioned, &args.versions);
     let struct_name = struct_versioned.ident.clone();
     let f_like_macros = generate_versioned_f_like_macros(&struct_versioned, &args.versions);
     TokenStream::from(quote::quote! {
-        #default_struct
+        #default_type
 
         macro_rules! #struct_name {
             #(#f_like_macros)*
@@ -53,4 +56,10 @@ pub fn impl_version(attr: TokenStream, input: TokenStream) -> TokenStream {
     TokenStream::from(quote::quote! {
         #(#impls)*
     })
+}
+
+// Placeholder for field
+#[proc_macro_attribute]
+pub fn field(_attr: TokenStream, input: TokenStream) -> TokenStream {
+    input
 }
