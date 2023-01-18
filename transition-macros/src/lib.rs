@@ -11,11 +11,7 @@ mod version;
 
 #[derive(Debug, FromMeta)]
 struct ArgsStruct {
-    versions: Versions,
-    #[darling(rename = "Serialize")]
-    serialize: bool,
-    #[darling(rename = "Deserialize")]
-    deserialize: bool
+    versions: Versions
 }
 
 #[derive(Debug, FromMeta)]

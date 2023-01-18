@@ -128,7 +128,6 @@ pub fn generate_versioned_impls(
                 version,
                 struct_ident,
             };
-            println!("{:?}", impl_version);
             visitor.visit_item_impl_mut(&mut impl_version);
             impls.push(impl_version);
         } else {

@@ -6,7 +6,7 @@ mod tests {
 
         // TODO: Generate the serializer and deserializer. Can't do it for now because didn't find a way to pass parameters
         // to the underlying types. Could be solve by the structure passing by sydnhs.
-        #[transition::versioned(versions("1", "2"), Serialize, Deserialize)]
+        #[transition::versioned(versions("1", "2"))]
         struct Wrap(u64);
 
         #[transition::impl_version(versions("1"))]
