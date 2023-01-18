@@ -4,7 +4,9 @@ mod tests {
     #[test]
     fn basic() {
 
-        #[transition::versioned(versions("1", "2", "3"))]
+        // TODO: Generate the serializer and deserializer. Can't do it for now because didn't find a way to pass parameters
+        // to the underlying types. Could be solve by the structure passing by Sylvain.
+        #[transition::versioned(versions("1", "2", "3"), Serialize, Deserialize)]
         struct Test {
             a: u64,
             //TODO: Use add possibility to use <> in version number
@@ -58,11 +60,6 @@ mod tests {
 
         let test = <Test!["3"]>::new();
         assert_eq!(test.get_b(), 3);
-
-        let test = Test::new();
-        assert_eq!(test.get_b(), 3);
-
-        //TODO: Add auto serialize version byte
 
         struct TestSerializer {}
 

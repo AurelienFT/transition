@@ -25,28 +25,32 @@ mod tests {
         testfn: test::StaticTestFn(|| test::assert_test_result(basic())),
     };
     fn basic() {
-        type Test = TestV0_3_0;
-        struct TestV0_1_2 {
+        enum Test {
+            TestV1(TestV1),
+            TestV2(TestV2),
+            TestV3(TestV3),
+        }
+        struct TestV1 {
             a: u64,
         }
-        struct TestV0_2_0 {
+        struct TestV2 {
             a: u64,
         }
-        struct TestV0_3_0 {
+        struct TestV3 {
             a: u64,
             b: u64,
         }
-        impl TestV0_1_2 {
+        impl TestV1 {
             fn new() -> Self {
                 Self { a: 1 }
             }
         }
-        impl TestV0_2_0 {
+        impl TestV2 {
             fn new() -> Self {
                 Self { a: 2 }
             }
         }
-        impl TestV0_3_0 {
+        impl TestV3 {
             fn new() -> Self {
                 Self { a: 2, b: 3 }
             }
@@ -54,7 +58,7 @@ mod tests {
                 self.b
             }
         }
-        impl TestV0_1_2 {
+        impl TestV1 {
             fn get_a(&self) -> u64 {
                 self.a
             }
@@ -62,7 +66,7 @@ mod tests {
                 self.a * b
             }
         }
-        impl TestV0_2_0 {
+        impl TestV2 {
             fn get_a(&self) -> u64 {
                 self.a
             }
@@ -70,7 +74,7 @@ mod tests {
                 self.a * b
             }
         }
-        let test = <TestV0_2_0>::new();
+        let test = <TestV2>::new();
         match (&test.get_a(), &2) {
             (left_val, right_val) => {
                 if !(*left_val == *right_val) {
@@ -97,7 +101,7 @@ mod tests {
                 }
             }
         };
-        let test = <TestV0_1_2>::new();
+        let test = <TestV1>::new();
         match (&test.get_a(), &1) {
             (left_val, right_val) => {
                 if !(*left_val == *right_val) {
@@ -124,21 +128,7 @@ mod tests {
                 }
             }
         };
-        let test = <TestV0_3_0>::new();
-        match (&test.get_b(), &3) {
-            (left_val, right_val) => {
-                if !(*left_val == *right_val) {
-                    let kind = ::core::panicking::AssertKind::Eq;
-                    ::core::panicking::assert_failed(
-                        kind,
-                        &*left_val,
-                        &*right_val,
-                        ::core::option::Option::None,
-                    );
-                }
-            }
-        };
-        let test = Test::new();
+        let test = <TestV3>::new();
         match (&test.get_b(), &3) {
             (left_val, right_val) => {
                 if !(*left_val == *right_val) {
@@ -153,30 +143,30 @@ mod tests {
             }
         };
         struct TestSerializer {}
-        impl Serializer<TestV0_1_2> for TestSerializer {
+        impl Serializer<TestV1> for TestSerializer {
             fn serialize(
                 &self,
-                data: &TestV0_1_2,
+                data: &TestV1,
                 buffer: &mut Vec<u8>,
             ) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
                 Ok(())
             }
         }
-        impl Serializer<TestV0_2_0> for TestSerializer {
+        impl Serializer<TestV2> for TestSerializer {
             fn serialize(
                 &self,
-                data: &TestV0_2_0,
+                data: &TestV2,
                 buffer: &mut Vec<u8>,
             ) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
                 Ok(())
             }
         }
-        impl Serializer<TestV0_3_0> for TestSerializer {
+        impl Serializer<TestV3> for TestSerializer {
             fn serialize(
                 &self,
-                data: &TestV0_3_0,
+                data: &TestV3,
                 buffer: &mut Vec<u8>,
             ) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
@@ -185,28 +175,28 @@ mod tests {
             }
         }
         struct TestDeserializer {}
-        impl Deserializer<TestV0_1_2> for TestDeserializer {
+        impl Deserializer<TestV1> for TestDeserializer {
             fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
                 &self,
                 buffer: &'a [u8],
-            ) -> IResult<&'a [u8], TestV0_1_2, E> {
-                Ok((buffer, TestV0_1_2 { a: 2 }))
+            ) -> IResult<&'a [u8], TestV1, E> {
+                Ok((buffer, TestV1 { a: 2 }))
             }
         }
-        impl Deserializer<TestV0_2_0> for TestDeserializer {
+        impl Deserializer<TestV2> for TestDeserializer {
             fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
                 &self,
                 buffer: &'a [u8],
-            ) -> IResult<&'a [u8], TestV0_2_0, E> {
-                Ok((buffer, TestV0_2_0 { a: 2 }))
+            ) -> IResult<&'a [u8], TestV2, E> {
+                Ok((buffer, TestV2 { a: 2 }))
             }
         }
-        impl Deserializer<TestV0_3_0> for TestDeserializer {
+        impl Deserializer<TestV3> for TestDeserializer {
             fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
                 &self,
                 buffer: &'a [u8],
-            ) -> IResult<&'a [u8], TestV0_3_0, E> {
-                Ok((buffer, TestV0_3_0 { a: 2, b: 3 }))
+            ) -> IResult<&'a [u8], TestV3, E> {
+                Ok((buffer, TestV3 { a: 2, b: 3 }))
             }
         }
     }

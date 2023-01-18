@@ -1,12 +1,29 @@
-use crate::{version::{Version, Versions}, Args};
+use crate::{version::{Version, Versions}, ArgsField};
 use darling::{FromMeta, util::parse_attribute_to_meta_list};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
     visit_mut::{self, VisitMut},
     Fields,
-    ItemImpl, ItemStruct, Type, NestedMeta, Field,
+    ItemImpl, ItemStruct, Type, NestedMeta, Field, Visibility,
 };
+
+pub fn generate_default_enum(visibility: &Visibility, struct_ident: &syn::Ident, structs: &Vec<ItemStruct>) -> TokenStream2 {
+    let mut variants = Vec::new();
+    for struct_version in structs {
+        let ident = &struct_version.ident;
+        let variant = quote! {
+            #ident(#ident)
+        };
+        variants.push(variant);
+    }
+    let default_enum = quote! {
+        #visibility enum #struct_ident {
+            #(#variants),*
+        }
+    };
+    return default_enum;
+}
 
 fn filter_fields(struct_version: &mut ItemStruct, version: &Version) {
     if let Fields::Named(fields) = &mut struct_version.fields {
@@ -16,7 +33,7 @@ fn filter_fields(struct_version: &mut ItemStruct, version: &Version) {
                 if attr.path.segments.len() > 1 {
                     if attr.path.segments[0].ident == "transition" && attr.path.segments[1].ident == "field" {
                         let attr_args = parse_attribute_to_meta_list(attr).unwrap();
-                        let args = Args::from_list(&attr_args.nested.into_iter().collect::<Vec<NestedMeta>>()).unwrap();
+                        let args = ArgsField::from_list(&attr_args.nested.into_iter().collect::<Vec<NestedMeta>>()).unwrap();
                         if !args.versions.0.contains(version) {
                             final_field = None;
                         }
