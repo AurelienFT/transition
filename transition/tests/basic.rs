@@ -5,7 +5,7 @@ mod tests {
     fn basic() {
 
         // TODO: Generate the serializer and deserializer. Can't do it for now because didn't find a way to pass parameters
-        // to the underlying types. Could be solve by the structure passing by Sylvain.
+        // to the underlying types. Could be solve by the structure passing by sydnhs.
         #[transition::versioned(versions("1", "2", "3"), Serialize, Deserialize)]
         struct Test {
             a: u64,

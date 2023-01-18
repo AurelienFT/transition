@@ -85,8 +85,6 @@ struct ImplVisitor<'a> {
 
 impl<'a> VisitMut for ImplVisitor<'a> {
     fn visit_type_mut(&mut self, node: &mut Type) {
-        // Sub-recurse (not really needed here since there aren't
-        // sub-expressions within an ExprType):
         if let Type::Path(path) = node {
             if let Some(ident) = path.path.get_ident() {
                 if self.struct_ident == ident {
@@ -96,6 +94,15 @@ impl<'a> VisitMut for ImplVisitor<'a> {
 
         }
         visit_mut::visit_type_mut(self, node);
+    }
+
+    fn visit_expr_path_mut(&mut self, i: &mut syn::ExprPath) {
+        if let Some(ident) = i.path.get_ident() {
+            if self.struct_ident == ident {
+                i.path.segments[0].ident = self.version.to_ident(ident);
+            }
+        }
+        visit_mut::visit_expr_path_mut(self, i);
     }
 
     fn visit_expr_struct_mut(&mut self, i: &mut syn::ExprStruct) {
@@ -121,6 +128,7 @@ pub fn generate_versioned_impls(
                 version,
                 struct_ident,
             };
+            println!("{:?}", impl_version);
             visitor.visit_item_impl_mut(&mut impl_version);
             impls.push(impl_version);
         } else {
