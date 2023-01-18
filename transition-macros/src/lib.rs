@@ -26,9 +26,8 @@ pub fn versioned(attr: TokenStream, input: TokenStream) -> TokenStream {
     let mut args = Args::from_list(&attr_args).unwrap();
     args.versions.0.sort();
     let mut struct_versioned = parse_macro_input!(input as ItemStruct);
-    //TODO: Remove only transition ones
     struct_versioned.attrs.retain(|attr| attr.path.is_ident("transition"));
-    let highest_version = args.versions.0.last().unwrap().to_ident(struct_versioned.ident.clone());
+    let highest_version = args.versions.0.last().unwrap().to_ident(&struct_versioned.ident);
     let ident = struct_versioned.ident.clone();
     let default_type = quote::quote! {
         type #ident = #highest_version;

@@ -4,29 +4,29 @@ mod tests {
     #[test]
     fn basic() {
 
-        #[transition::versioned(versions("0.1.2", "0.2.0", "0.3.0"))]
+        #[transition::versioned(versions("1", "2", "3"))]
         struct Test {
             a: u64,
             //TODO: Use add possibility to use <> in version number
-            #[transition::field(versions("0.3.0"))]
+            #[transition::field(versions("3"))]
             b: u64,
         }
 
-        #[transition::impl_version(versions("0.1.2"))]
+        #[transition::impl_version(versions("1"))]
         impl Test {
             fn new() -> Self {
                 Self { a: 1 }
             }
         }
 
-        #[transition::impl_version(versions("0.2.0"))]
+        #[transition::impl_version(versions("2"))]
         impl Test {
             fn new() -> Self {
                 Self { a: 2 }
             }
         }
 
-        #[transition::impl_version(versions("0.3.0"))]
+        #[transition::impl_version(versions("3"))]
         impl Test {
             fn new() -> Self {
                 Self { a: 2, b: 3 }
@@ -37,7 +37,7 @@ mod tests {
             }
         }
 
-        #[transition::impl_version(versions("0.1.2", "0.2.0"))]
+        #[transition::impl_version(versions("1", "2"))]
         impl Test {
             fn get_a(&self) -> u64 {
                 self.a
@@ -48,15 +48,15 @@ mod tests {
             }
         }
 
-        let test = <Test!["0.2.0"]>::new();
+        let test = <Test!["2"]>::new();
         assert_eq!(test.get_a(), 2);
         assert_eq!(test.mul(2), 4);
 
-        let test = <Test!["0.1.2"]>::new();
+        let test = <Test!["1"]>::new();
         assert_eq!(test.get_a(), 1);
         assert_eq!(test.mul(2), 2);
 
-        let test = <Test!["0.3.0"]>::new();
+        let test = <Test!["3"]>::new();
         assert_eq!(test.get_b(), 3);
 
         let test = Test::new();
@@ -66,7 +66,7 @@ mod tests {
 
         struct TestSerializer {}
 
-        #[transition::impl_version(versions("0.1.2", "0.2.0"), structure = "Test")]
+        #[transition::impl_version(versions("1", "2"), structure = "Test")]
         impl Serializer<Test> for TestSerializer {
             fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
@@ -74,7 +74,7 @@ mod tests {
             }
         }
 
-        #[transition::impl_version(versions("0.3.0"), structure = "Test")]
+        #[transition::impl_version(versions("3"), structure = "Test")]
         impl Serializer<Test> for TestSerializer {
             fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
@@ -85,7 +85,7 @@ mod tests {
 
         struct TestDeserializer {}
 
-        #[transition::impl_version(versions("0.1.2", "0.2.0"), structure = "Test")]
+        #[transition::impl_version(versions("1", "2"), structure = "Test")]
         impl Deserializer<Test> for TestDeserializer {
             fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
                     &self,
@@ -96,7 +96,7 @@ mod tests {
             }
         }
 
-        #[transition::impl_version(versions("0.3.0"), structure = "Test")]
+        #[transition::impl_version(versions("3"), structure = "Test")]
         impl Deserializer<Test> for TestDeserializer {
             fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
                     &self,
