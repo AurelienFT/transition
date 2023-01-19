@@ -13,3 +13,6 @@ proc-macro2 = "1.0"
 syn = { version = "1.0", features = ["visit-mut"]}
 darling = "0.14"
 quote = "1.0"
+unsigned-varint = { version = "0.7.1", features = [
+    "nom",
+], git = "https://github.com/cyphar/unsigned-varint.git", branch = "nom6-errors" }

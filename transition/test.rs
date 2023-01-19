@@ -9,6 +9,7 @@ mod tests {
         error::{ParseError, ContextError},
         IResult,
     };
+    use transition::Versioned;
     extern crate test;
     #[cfg(test)]
     #[rustc_test_marker = "tests::basic"]
@@ -39,6 +40,18 @@ mod tests {
         struct TestV3 {
             a: u64,
             b: u64,
+        }
+        impl Versioned for TestV1 {
+            const VERSION: u64 = 1u64;
+            const VERSION_VARINT_SIZE_BYTES: usize = 1usize;
+        }
+        impl Versioned for TestV2 {
+            const VERSION: u64 = 2u64;
+            const VERSION_VARINT_SIZE_BYTES: usize = 1usize;
+        }
+        impl Versioned for TestV3 {
+            const VERSION: u64 = 3u64;
+            const VERSION_VARINT_SIZE_BYTES: usize = 1usize;
         }
         impl TestV1 {
             fn new() -> Self {

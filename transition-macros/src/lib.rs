@@ -32,10 +32,11 @@ pub fn versioned(attr: TokenStream, input: TokenStream) -> TokenStream {
     args.versions.0.sort();
     let mut struct_versioned = parse_macro_input!(input as ItemStruct);
     struct_versioned.attrs.retain(|attr| !attr.path.is_ident("transition"));
-    let structs = generate_versioned_struct(&struct_versioned, &args.versions);
-    let default_enum = generate_default_enum(&struct_versioned.vis, &struct_versioned.ident, &structs);
+    let (structs, impls) = generate_versioned_struct(&struct_versioned, &args.versions);
+    let default_enum = generate_default_enum(&struct_versioned.vis, &struct_versioned.attrs, &struct_versioned.ident, &structs);
     let struct_name = struct_versioned.ident.clone();
-    let f_like_macros = generate_versioned_f_like_macros(&struct_versioned, &args.versions);
+    let (f_like_macros, f_like_macros_variant) = generate_versioned_f_like_macros(&struct_versioned, &args.versions);
+    let macro_variant_ident = syn::Ident::new(&format!("{}Variant", struct_name), struct_name.span());
     TokenStream::from(quote::quote! {
         #default_enum
 
@@ -43,7 +44,13 @@ pub fn versioned(attr: TokenStream, input: TokenStream) -> TokenStream {
             #(#f_like_macros)*
         }
 
+        macro_rules! #macro_variant_ident {
+            #(#f_like_macros_variant)*
+        }
+
         #(#structs)*
+
+        #(#impls)*
     })
 }
 

@@ -1,11 +1,11 @@
 mod tests {
     use massa_serialization::{Serializer, Deserializer, SerializeError};
     use nom::{error::{ParseError, ContextError}, IResult};
+    //TODO: make it  Optional import
+    use transition::Versioned;
     #[test]
     fn tuple_struct() {
 
-        // TODO: Generate the serializer and deserializer. Can't do it for now because didn't find a way to pass parameters
-        // to the underlying types. Could be solve by the structure passing by sydnhs.
         #[transition::versioned(versions("1", "2"))]
         struct Wrap(u64);
 

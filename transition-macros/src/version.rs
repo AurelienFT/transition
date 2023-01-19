@@ -6,7 +6,7 @@ pub struct Versions(pub Vec<Version>);
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Version {
-    pub version: u32
+    pub version: u64
 }
 
 impl Version {
@@ -36,7 +36,7 @@ impl Ord for Version {
 
 impl FromMeta for Version {
     fn from_string(value: &str) -> darling::Result<Self> {
-        Ok(Version { version: value.parse::<u32>().unwrap() })
+        Ok(Version { version: value.parse::<u64>().unwrap() })
     }
 }
 

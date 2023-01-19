@@ -5,10 +5,11 @@ use quote::quote;
 use syn::{
     visit_mut::{self, VisitMut},
     Fields,
-    ItemImpl, ItemStruct, Type, NestedMeta, Field, Visibility,
+    ItemImpl, ItemStruct, Type, NestedMeta, Field, Visibility, Attribute,
 };
+use unsigned_varint::encode::{u64_buffer, self};
 
-pub fn generate_default_enum(visibility: &Visibility, struct_ident: &syn::Ident, structs: &Vec<ItemStruct>) -> TokenStream2 {
+pub fn generate_default_enum(visibility: &Visibility, struct_attrs: &Vec<Attribute>, struct_ident: &syn::Ident, structs: &Vec<ItemStruct>) -> TokenStream2 {
     let mut variants = Vec::new();
     for struct_version in structs {
         let ident = &struct_version.ident;
@@ -18,6 +19,7 @@ pub fn generate_default_enum(visibility: &Visibility, struct_ident: &syn::Ident,
         variants.push(variant);
     }
     let default_enum = quote! {
+        #(#struct_attrs)*
         #visibility enum #struct_ident {
             #(#variants),*
         }
@@ -53,29 +55,43 @@ fn filter_fields(struct_version: &mut ItemStruct, version: &Version) {
     }
 }
 
-pub fn generate_versioned_struct(input: &ItemStruct, versions: &Versions) -> Vec<ItemStruct> {
+// (Structs, implementations of Versioned)
+pub fn generate_versioned_struct(input: &ItemStruct, versions: &Versions) -> (Vec<ItemStruct>, Vec<TokenStream2>) {
     let mut structs = Vec::new();
+    let mut impls = Vec::new();
     for version in &versions.0 {
         let mut struct_version = input.clone();
         struct_version.ident = version.to_ident(&input.ident);
         filter_fields(&mut struct_version, version);
+        let ident = &struct_version.ident;
+        let version = version.version;
+        let len_version = encode::u64(version, &mut u64_buffer()).len();
+        impls.push(quote!(
+            impl Versioned for #ident {
+                const VERSION: u64 = #version;
+                const VERSION_VARINT_SIZE_BYTES: usize = #len_version;
+            }
+        ));
         structs.push(struct_version);
     }
-    return structs;
+    return (structs, impls);
 }
 
+// (macro for the type of the struct, macro for the variant of the enum with all types)
 pub fn generate_versioned_f_like_macros(
     input: &ItemStruct,
     versions: &Versions,
-) -> Vec<TokenStream2> {
+) -> (Vec<TokenStream2>, Vec<TokenStream2>) {
     let mut f_like_macros = Vec::new();
+    let mut f_like_macros_variant = Vec::new();
     for version in &versions.0 {
         let version_ident = format!("{}", version.version);
+        let ident = &input.ident;
         let struct_version = version.to_ident(&input.ident);
-        let f_like_macro = quote!([#version_ident] => { #struct_version };);
-        f_like_macros.push(f_like_macro);
+        f_like_macros.push(quote!([#version_ident] => { #struct_version };));
+        f_like_macros_variant.push(quote!([#version_ident] => { #ident::#struct_version };));
     }
-    return f_like_macros;
+    return (f_like_macros, f_like_macros_variant);
 }
 
 struct ImplVisitor<'a> {
