@@ -102,3 +102,13 @@ assert_eq!(test.get_a(), 1);
 ```
 
 This example with even more usage is available [here](https://github.com/AurelienFT/transition/blob/main/transition/tests/basic.rs) and the expanded code is located [here](https://github.com/AurelienFT/transition/blob/main/transition/test.rs)
+
+For each structure versioned with `#[transition::versioned]` the `Versioned` trait is implemented. You can find his definition [here](https://github.com/AurelienFT/transition/blob/main/transition/src/lib.rs)
+
+## Generated macros
+
+When you use `#[transition::versioned]` macro on a structure it will generate you a bunch of function like macros useful to
+navigate easily between versions at compile-time (`ident_struct` in the name of the macros above should be replaced with the actual name at usage):
+
+- `[ident_struct]!["version"]`: Give you the type of the structure of a given version. Example : `Test!["1"]` allow you to play with `Test` structure version 1 type.
+- `[ident_struct]Variant!["version"]`: Give you the variant of the enum with all versions, associated to the version you specified. Example: `TestVariant!["1"]` allow you to access to the variant of the version 1 in the `Test` enum.
