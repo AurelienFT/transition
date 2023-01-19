@@ -53,6 +53,30 @@ mod tests {
             const VERSION: u64 = 3u64;
             const VERSION_VARINT_SIZE_BYTES: usize = 1usize;
         }
+        impl Test {
+            fn new(version: u64) -> Self {
+                match version {
+                    <TestV1>::VERSION => Test::TestV1(<TestV1>::new()),
+                    <TestV2>::VERSION => Test::TestV2(<TestV2>::new()),
+                    <TestV3>::VERSION => Test::TestV3(<TestV3>::new()),
+                    _ => {
+                        ::core::panicking::panic_fmt(
+                            ::core::fmt::Arguments::new_v1(
+                                &["Unknown version: "],
+                                &[::core::fmt::ArgumentV1::new_display(&version)],
+                            ),
+                        )
+                    }
+                }
+            }
+            fn get_a(&self) -> u64 {
+                match self {
+                    Test::TestV1(test) => test.get_a(),
+                    Test::TestV2(test) => test.get_a(),
+                    Test::TestV3(test) => test.get_a(),
+                }
+            }
+        }
         impl TestV1 {
             fn new() -> Self {
                 Self { a: 1 }
@@ -80,6 +104,14 @@ mod tests {
             }
         }
         impl TestV2 {
+            fn get_a(&self) -> u64 {
+                self.a
+            }
+            fn mul(&self, b: u64) -> u64 {
+                self.a * b
+            }
+        }
+        impl TestV3 {
             fn get_a(&self) -> u64 {
                 self.a
             }
@@ -143,6 +175,20 @@ mod tests {
         };
         let test = <TestV3>::new();
         match (&test.get_b(), &3) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    let kind = ::core::panicking::AssertKind::Eq;
+                    ::core::panicking::assert_failed(
+                        kind,
+                        &*left_val,
+                        &*right_val,
+                        ::core::option::Option::None,
+                    );
+                }
+            }
+        };
+        let test = Test::new(1);
+        match (&test.get_a(), &1) {
             (left_val, right_val) => {
                 if !(*left_val == *right_val) {
                     let kind = ::core::panicking::AssertKind::Eq;

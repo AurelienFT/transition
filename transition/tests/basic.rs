@@ -13,6 +13,25 @@ mod tests {
             b: u64,
         }
 
+        impl Test {
+            fn new(version: u64) -> Self {
+                match version {
+                    <Test!["1"]>::VERSION => TestVariant!["1"](<Test!["1"]>::new()),
+                    <Test!["2"]>::VERSION => TestVariant!["2"](<Test!["2"]>::new()),
+                    <Test!["3"]>::VERSION => TestVariant!["3"](<Test!["3"]>::new()),
+                    _ => panic!("Unknown version: {}", version)
+                }
+            }
+
+            fn get_a(&self) -> u64 {
+                match self {
+                    Test::TestV1(test) => test.get_a(),
+                    Test::TestV2(test) => test.get_a(),
+                    Test::TestV3(test) => test.get_a(),
+                }
+            }
+        }
+
         #[transition::impl_version(versions("1"))]
         impl Test {
             fn new() -> Self {
@@ -38,7 +57,7 @@ mod tests {
             }
         }
 
-        #[transition::impl_version(versions("1", "2"))]
+        #[transition::impl_version(versions("1", "2", "3"))]
         impl Test {
             fn get_a(&self) -> u64 {
                 self.a
@@ -59,6 +78,9 @@ mod tests {
 
         let test = <Test!["3"]>::new();
         assert_eq!(test.get_b(), 3);
+
+        let test = Test::new(1);
+        assert_eq!(test.get_a(), 1);
 
         struct TestSerializer {}
 
