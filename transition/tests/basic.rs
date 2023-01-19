@@ -60,11 +60,15 @@ mod tests {
         #[transition::impl_version(versions("1", "2", "3"))]
         impl Test {
             fn get_a(&self) -> u64 {
-                self.a
+                Test::test_method(self.a)
             }
 
             fn mul(&self, b: u64) -> u64 {
                 self.a * b
+            }
+
+            fn test_method(a: u64) -> u64 {
+                a
             }
         }
 

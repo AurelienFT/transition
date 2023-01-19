@@ -101,6 +101,7 @@ struct ImplVisitor<'a> {
 
 impl<'a> VisitMut for ImplVisitor<'a> {
     fn visit_type_mut(&mut self, node: &mut Type) {
+        //println!("visit_type_mut: {:?}", node);
         if let Type::Path(path) = node {
             if let Some(ident) = path.path.get_ident() {
                 if self.struct_ident == ident {
@@ -112,11 +113,29 @@ impl<'a> VisitMut for ImplVisitor<'a> {
         visit_mut::visit_type_mut(self, node);
     }
 
-    fn visit_expr_path_mut(&mut self, i: &mut syn::ExprPath) {
-        if let Some(ident) = i.path.get_ident() {
+    fn visit_path_mut(&mut self, i: &mut syn::Path) {
+        if let Some(ident) = i.get_ident() {
             if self.struct_ident == ident {
-                i.path.segments[0].ident = self.version.to_ident(ident);
+                i.segments[0].ident = self.version.to_ident(ident);
             }
+        }
+        visit_mut::visit_path_mut(self, i);
+    }
+
+    fn visit_expr_type_mut(&mut self, i: &mut syn::ExprType) {
+        if let Type::Path(path) = &mut *i.ty {
+            if let Some(ident) = path.path.get_ident() {
+                if self.struct_ident == ident {
+                    path.path.segments[0].ident = self.version.to_ident(ident);
+                }
+            }
+        }
+        visit_mut::visit_expr_type_mut(self, i);
+    }
+
+    fn visit_expr_path_mut(&mut self, i: &mut syn::ExprPath) {
+        if self.struct_ident == &i.path.segments[0].ident {
+            i.path.segments[0].ident = self.version.to_ident(&i.path.segments[0].ident);
         }
         visit_mut::visit_expr_path_mut(self, i);
     }
@@ -147,11 +166,15 @@ pub fn generate_versioned_impls(
             visitor.visit_item_impl_mut(&mut impl_version);
             impls.push(impl_version);
         } else {
-            if let syn::Type::Path(path) = &mut *impl_version.self_ty {
+            if let Type::Path(path) = &*input.self_ty {
                 if let Some(ident) = path.path.get_ident() {
-                    path.path.segments[0].ident = version.to_ident(ident);
+                    //println!("impl_version: {:?}", impl_version);
+                    let mut visitor = ImplVisitor {
+                        version,
+                        struct_ident: ident,
+                    };
+                    visitor.visit_item_impl_mut(&mut impl_version);
                     impls.push(impl_version);
-                    continue;
                 }
             }
         }

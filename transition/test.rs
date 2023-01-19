@@ -97,26 +97,35 @@ mod tests {
         }
         impl TestV1 {
             fn get_a(&self) -> u64 {
-                self.a
+                TestV1::test_method(self.a)
             }
             fn mul(&self, b: u64) -> u64 {
                 self.a * b
+            }
+            fn test_method(a: u64) -> u64 {
+                a
             }
         }
         impl TestV2 {
             fn get_a(&self) -> u64 {
-                self.a
+                TestV2::test_method(self.a)
             }
             fn mul(&self, b: u64) -> u64 {
                 self.a * b
+            }
+            fn test_method(a: u64) -> u64 {
+                a
             }
         }
         impl TestV3 {
             fn get_a(&self) -> u64 {
-                self.a
+                TestV3::test_method(self.a)
             }
             fn mul(&self, b: u64) -> u64 {
                 self.a * b
+            }
+            fn test_method(a: u64) -> u64 {
+                a
             }
         }
         let test = <TestV2>::new();
