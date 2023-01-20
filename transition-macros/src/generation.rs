@@ -96,7 +96,7 @@ pub fn generate_versioned_f_like_macros(
 
 struct ImplVisitor<'a> {
     version: &'a Version,
-    struct_ident: &'a syn::Ident,
+    struct_ident: &'a Vec<syn::Ident>,
 }
 
 impl<'a> VisitMut for ImplVisitor<'a> {
@@ -104,8 +104,11 @@ impl<'a> VisitMut for ImplVisitor<'a> {
         //println!("visit_type_mut: {:?}", node);
         if let Type::Path(path) = node {
             if let Some(ident) = path.path.get_ident() {
-                if self.struct_ident == ident {
-                    path.path.segments[0].ident = self.version.to_ident(ident);
+                for struct_ident in self.struct_ident {
+                    if struct_ident == ident {
+                        path.path.segments[0].ident = self.version.to_ident(ident);
+                        break;
+                    }
                 }
             }
 
@@ -115,8 +118,11 @@ impl<'a> VisitMut for ImplVisitor<'a> {
 
     fn visit_path_mut(&mut self, i: &mut syn::Path) {
         if let Some(ident) = i.get_ident() {
-            if self.struct_ident == ident {
-                i.segments[0].ident = self.version.to_ident(ident);
+            for struct_ident in self.struct_ident {
+                if struct_ident == ident {
+                    i.segments[0].ident = self.version.to_ident(ident);
+                    break;
+                }
             }
         }
         visit_mut::visit_path_mut(self, i);
@@ -125,8 +131,11 @@ impl<'a> VisitMut for ImplVisitor<'a> {
     fn visit_expr_type_mut(&mut self, i: &mut syn::ExprType) {
         if let Type::Path(path) = &mut *i.ty {
             if let Some(ident) = path.path.get_ident() {
-                if self.struct_ident == ident {
-                    path.path.segments[0].ident = self.version.to_ident(ident);
+                for struct_ident in self.struct_ident {
+                    if struct_ident == ident {
+                        path.path.segments[0].ident = self.version.to_ident(ident);
+                        break;
+                    }
                 }
             }
         }
@@ -134,16 +143,23 @@ impl<'a> VisitMut for ImplVisitor<'a> {
     }
 
     fn visit_expr_path_mut(&mut self, i: &mut syn::ExprPath) {
-        if self.struct_ident == &i.path.segments[0].ident {
-            i.path.segments[0].ident = self.version.to_ident(&i.path.segments[0].ident);
+        let ident = &i.path.segments[0].ident;
+        for struct_ident in self.struct_ident {
+            if struct_ident == ident {
+                i.path.segments[0].ident = self.version.to_ident(&ident);
+                break;
+            }
         }
         visit_mut::visit_expr_path_mut(self, i);
     }
 
     fn visit_expr_struct_mut(&mut self, i: &mut syn::ExprStruct) {
         if let Some(ident) = i.path.get_ident() {
-            if self.struct_ident == ident {
-                i.path.segments[0].ident = self.version.to_ident(ident);
+            for struct_ident in self.struct_ident {
+                if struct_ident == ident {
+                    i.path.segments[0].ident = self.version.to_ident(ident);
+                    break;
+                }
             }
         }
         visit_mut::visit_expr_struct_mut(self, i);
@@ -151,7 +167,7 @@ impl<'a> VisitMut for ImplVisitor<'a> {
 }
 
 pub fn generate_versioned_impls(
-    struct_ident: &Option<syn::Ident>,
+    struct_ident: &Option<Vec<syn::Ident>>,
     input: &ItemImpl,
     versions: &Versions,
 ) -> Vec<ItemImpl> {
@@ -171,7 +187,7 @@ pub fn generate_versioned_impls(
                     //println!("impl_version: {:?}", impl_version);
                     let mut visitor = ImplVisitor {
                         version,
-                        struct_ident: ident,
+                        struct_ident: &vec![ident.clone()],
                     };
                     visitor.visit_item_impl_mut(&mut impl_version);
                     impls.push(impl_version);

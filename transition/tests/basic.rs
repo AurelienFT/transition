@@ -88,7 +88,7 @@ mod tests {
 
         struct TestSerializer {}
 
-        #[transition::impl_version(versions("1", "2"), structure = "Test")]
+        #[transition::impl_version(versions("1", "2"), structures("Test"))]
         impl Serializer<Test> for TestSerializer {
             fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
@@ -96,7 +96,7 @@ mod tests {
             }
         }
 
-        #[transition::impl_version(versions("3"), structure = "Test")]
+        #[transition::impl_version(versions("3"), structures("Test"))]
         impl Serializer<Test> for TestSerializer {
             fn serialize(&self, data: &Test, buffer: &mut Vec<u8>) -> Result<(), SerializeError> {
                 buffer.push(data.a as u8);
@@ -107,7 +107,7 @@ mod tests {
 
         struct TestDeserializer {}
 
-        #[transition::impl_version(versions("1", "2"), structure = "Test")]
+        #[transition::impl_version(versions("1", "2"), structures("Test"))]
         impl Deserializer<Test> for TestDeserializer {
             fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
                     &self,
@@ -118,7 +118,7 @@ mod tests {
             }
         }
 
-        #[transition::impl_version(versions("3"), structure = "Test")]
+        #[transition::impl_version(versions("3"), structures("Test"))]
         impl Deserializer<Test> for TestDeserializer {
             fn deserialize<'a, E: ParseError<&'a [u8]> + ContextError<&'a [u8]>>(
                     &self,
