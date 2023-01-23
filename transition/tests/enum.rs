@@ -10,6 +10,8 @@ mod tests {
         enum Human {
             Alice(Alice),
             Bob(Bob),
+            #[transition::variant(versions("3"))]
+            Charlie(Charlie),
         }
 
         struct Alice {
@@ -19,6 +21,31 @@ mod tests {
         struct Bob {
             b: u64,
         }
+
+        struct Charlie {
+            c: u64,
+        }
+
+        #[transition::impl_version(versions("1"))]
+        impl Human {
+            fn new() -> Self {
+                Self::Alice(Alice { a: 1 })
+            }
+        }
+
+        #[transition::impl_version(versions("2"))]
+        impl Human {
+            fn new() -> Self {
+                Self::Bob(Bob { b: 2 })
+            }
+        }
+
+        #[transition::impl_version(versions("3"))]
+        impl Human {
+            fn new() -> Self {
+                Self::Charlie(Charlie { c: 3 })
+            }
+        }        
 
     }
 }

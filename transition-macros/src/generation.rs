@@ -1,18 +1,17 @@
 use crate::{version::{Version, Versions}, ArgsField};
 use darling::{FromMeta, util::parse_attribute_to_meta_list};
-use proc_macro2::TokenStream as TokenStream2;
+use proc_macro2::{TokenStream as TokenStream2, Ident};
 use quote::quote;
 use syn::{
     visit_mut::{self, VisitMut},
     Fields,
-    ItemImpl, ItemStruct, Type, NestedMeta, Field, Visibility, Attribute,
+    ItemImpl, ItemStruct, Type, NestedMeta, Field, Visibility, Attribute, ItemEnum,
 };
 use unsigned_varint::encode::{u64_buffer, self};
 
-pub fn generate_default_enum(visibility: &Visibility, struct_attrs: &Vec<Attribute>, struct_ident: &syn::Ident, structs: &Vec<ItemStruct>) -> TokenStream2 {
+pub fn generate_default_enum(visibility: &Visibility, struct_attrs: &Vec<Attribute>, struct_ident: &syn::Ident, structs: &Vec<Ident>) -> TokenStream2 {
     let mut variants = Vec::new();
-    for struct_version in structs {
-        let ident = &struct_version.ident;
+    for ident in structs {
         let variant = quote! {
             #ident(#ident)
         };
@@ -25,6 +24,32 @@ pub fn generate_default_enum(visibility: &Visibility, struct_attrs: &Vec<Attribu
         }
     };
     return default_enum;
+}
+
+fn filter_variants(enum_version: &mut ItemEnum, version: &Version) {
+    enum_version.variants = enum_version.variants.iter().filter_map(|variant| {
+        let mut final_variant = Some(variant.clone());
+        let final_attrs = variant.attrs.iter().filter_map(|attr| {
+            if attr.path.segments.len() > 1 {
+                if attr.path.segments[0].ident == "transition" && attr.path.segments[1].ident == "variant" {
+                    let attr_args = parse_attribute_to_meta_list(attr).unwrap();
+                    let args = ArgsField::from_list(&attr_args.nested.into_iter().collect::<Vec<NestedMeta>>()).unwrap();
+                    if !args.versions.0.contains(version) {
+                        final_variant = None;
+                    }
+                    None
+                } else {
+                    Some(attr.clone())
+                }
+            } else {
+                Some(attr.clone())
+            }
+        }).collect();
+        if let Some(v) = &mut final_variant {
+            v.attrs = final_attrs;
+        }
+        final_variant
+    }).collect();
 }
 
 fn filter_fields(struct_version: &mut ItemStruct, version: &Version) {
@@ -55,7 +80,7 @@ fn filter_fields(struct_version: &mut ItemStruct, version: &Version) {
     }
 }
 
-// (Structs, implementations of Versioned)
+// (Structs, implementations of Versioned trait)
 pub fn generate_versioned_struct(input: &ItemStruct, versions: &Versions) -> (Vec<ItemStruct>, Vec<TokenStream2>) {
     let mut structs = Vec::new();
     let mut impls = Vec::new();
@@ -77,17 +102,40 @@ pub fn generate_versioned_struct(input: &ItemStruct, versions: &Versions) -> (Ve
     return (structs, impls);
 }
 
+// (Enum, implementations of Versioned trait)
+pub fn generate_versioned_enum(
+    input: &ItemEnum, versions: &Versions
+) -> (Vec<ItemEnum>, Vec<TokenStream2>) {
+    let mut enums = Vec::new();
+    let mut impls = Vec::new();
+    for version in &versions.0 {
+        let mut enum_version = input.clone();
+        enum_version.ident = version.to_ident(&input.ident);
+        filter_variants(&mut enum_version, version);
+        let ident = &enum_version.ident;
+        let version = version.version;
+        let len_version = encode::u64(version, &mut u64_buffer()).len();
+        impls.push(quote!(
+            impl Versioned for #ident {
+                const VERSION: u64 = #version;
+                const VERSION_VARINT_SIZE_BYTES: usize = #len_version;
+            }
+        ));
+        enums.push(enum_version);
+    }
+    return (enums, impls);
+}
+
 // (macro for the type of the struct, macro for the variant of the enum with all types)
 pub fn generate_versioned_f_like_macros(
-    input: &ItemStruct,
+    ident: &Ident,
     versions: &Versions,
 ) -> (Vec<TokenStream2>, Vec<TokenStream2>) {
     let mut f_like_macros = Vec::new();
     let mut f_like_macros_variant = Vec::new();
     for version in &versions.0 {
         let version_ident = format!("{}", version.version);
-        let ident = &input.ident;
-        let struct_version = version.to_ident(&input.ident);
+        let struct_version = version.to_ident(&ident);
         f_like_macros.push(quote!([#version_ident] => { #struct_version };));
         f_like_macros_variant.push(quote!([#version_ident] => { #ident::#struct_version };));
     }
